@@ -1,0 +1,36 @@
+{
+  "name": "frontend-template",
+  "version": "1.0.0",
+  "description": "Template for Vite/Vue3/Postcss apps.",
+  "engines": {
+    "node": ">=18",
+    "npm": ">=8"
+  },
+  "type": "module",
+  "scripts": {
+    "format": "prettier -w \"{**/*,*}.{ts,js,json}\"",
+    "format:check": "prettier --check \"{**/*,*}.{ts,js,json,vue}\"",
+    "lint": "oxlint -c .oxlintrc.json .",
+    "lint:style": "./node_modules/.bin/stylelint \"**/src/**/*.{css,vue}\"",
+    "dev:web:run": "pnpm --filter '@samatech/frontend-template' run dev",
+    "prod:web:build": "pnpm --filter '@samatech/frontend-template' run build",
+    "prod:web:preview": "pnpm --filter '@samatech/frontend-template' run preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samatechtw/frontend-template.git"
+  },
+  "keywords": [],
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/samatechtw/frontend-template/issues"
+  },
+  "homepage": "https://github.com/samatechtw/frontend-template#Readme.md",
+  "author": "Sam Pullman",
+  "devDependencies": {
+    "oxlint": "^0.14.1",
+    "prettier": "^3.4.2",
+    "stylelint": "^16.11.0",
+    "stylelint-config-recommended-vue": "^1.5.0"
+  }
+}
