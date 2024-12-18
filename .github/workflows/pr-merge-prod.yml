@@ -1,0 +1,68 @@
+name: PR Merge (prod)
+
+on:
+  push:
+    branches: [main]
+  repository_dispatch:
+    types: [trigger-workflow]
+
+env:
+  WORKSPACE_ROOT: .
+  ENVIRONMENT: prod
+
+# Cancel redundant workflow runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pre_job:
+    # needs: fast_forward_job
+    name: Run Workflow?
+    runs-on: ubuntu-22.04
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          concurrent_skipping: 'never'
+          skip_after_successful_duplicate: 'true'
+          # Changes to paths must be synced with pr-merge*.yml
+          paths: '[".github/workflows/pr-commit.yml", "web/**", "backend/**", "*"]'
+          paths_ignore: '["**/README.md", "skaffold*.yaml"]'
+
+  repo-metadata:
+    needs: pre_job
+    if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
+    name: Get repo metadata
+    runs-on: ubuntu-latest
+    outputs:
+      next_version: ${{ steps.meta.outputs.next_version }}
+      sha8: ${{ steps.meta.outputs.sha8 }}
+      repo_slug: ${{ steps.meta.outputs.repo_slug }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: meta
+        uses: ./.github/actions/repo-metadata
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-apps:
+    needs: pre_job
+    if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
+    name: Build Apps
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code into workspace directory
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/env-setup
+      - name: Build web app
+        run: npm run prod:web:build
